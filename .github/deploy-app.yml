@@ -1,0 +1,54 @@
+name: Deploy to Azure WebApp
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@main
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: <acr-login-server>
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Set image version
+      id: image-version
+      run: echo "::set-output name=version::$(echo ${GITHUB_REF#refs/heads/})-$(date +'%Y.%m.%d.%H.%M')"
+
+    - name: 'Build and push image'
+      working-directory: ./app
+      run: |
+        docker build . -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker build . -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
+        docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
+
+  deploy:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: <app-name>
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        images: '<acr-login-server>/<image-name>:$IMAGE_VERSION'
