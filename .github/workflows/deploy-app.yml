@@ -20,7 +20,7 @@ jobs:
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
-        login-server: ${{vars.DOCKER_REGISTRY_SERVER_URL}}
+        login-server: ${{secrets.DOCKER_REGISTRY_SERVER_URL}}
         username: ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}
         password: ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
 
@@ -31,13 +31,13 @@ jobs:
     - name: 'Build and push image'
       working-directory: ./app
       run: |
-        docker build . -t ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
-        docker build . -t ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
-        docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
-        docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
+        docker build . -t ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker build . -t ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
+        docker push ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker push ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
-        app-name: ${{ vars.WEB_APP_NAME }}
-        images: '${{vars.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
+        app-name: ${{ secrets.WEB_APP_NAME }}
+        images: '${{secrets.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
