@@ -6,15 +6,15 @@
             //"value": "asauras-kv"
         //},
         "containerRegistryName": {
-            "value": "asaurasacr"
+            "value": "asaurasieuacr"
         },
 
         "ServicePlanName": {
-            "value": "asauras-asp"
+            "value": "asaurasieu-asp"
         },
 
         "webAppName": {
-            "value": "asauras-ex3"
+            "value": "asaurasieu-ex3"
         },
 
         "containerRegistryImageName": {
