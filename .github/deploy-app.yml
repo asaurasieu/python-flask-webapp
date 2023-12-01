@@ -1,9 +1,14 @@
 name: Deploy to Azure WebApp
 
-on:
-  push:
-    branches:
-      - main
+on: [push, workflow_dispatch]
+
+env:
+  REGISTRY_LOGIN_SERVER: asaurasacr.azurecr.io
+  KEY_VAULT_SECRET_NAME_ACR_USERNAME: 'acr-username'
+  KEY_VALUE_SECRET_NAME_ACR_PASSWORD: 'acr-password1'
+  KEY_VAULT_NAME: 'asauras-kv'
+  IMAGE_BASE_NAME: 'asaurasapp-ex3'
+  AZURE_WEBAPP_NAME: 'asauras-ex3'
 
 jobs:
   build-and-publish:
@@ -17,12 +22,19 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Docker Registry Credentials 
+      uses: azure/CLI@v1
+      with: 
+        inlineScript:
+          echo "REGISTRY_USERNAME=$(az keyvault secret show --name ${{env.KEY_VAULT_SECRET_NAME_ACR_USERNAME}} --vault-name ${{env.KEY_VAULT_NAME}} --query value -o tsv)" >> $GITHUB_ENV
+          echo "REGISTRY_PASSWORD=$(az keyvault secret show --name ${{env.KEY_VALUE_SECRET_NAME_ACR_PASSWORD}} --vault-name ${{env.KEY_VAULT_NAME}} --query value -o tsv)" >> $GIT
+
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
-        login-server: <acr-login-server>
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
+        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
+        username: ${{env.REGISTRY_USERNAME}}
+        password: ${{env.REGISTRY_PASSWORD}}
 
     - name: Set image version
       id: image-version
@@ -35,10 +47,14 @@ jobs:
         docker build . -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
         docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ steps.image-version.outputs.version }}
         docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
+      outputs:
+          image-version: ${{ steps.image-version.outputs.version }}
+
 
   deploy:
     needs: build-and-publish
     runs-on: ubuntu-latest
+
     steps:
     - name: Login to Azure
       uses: azure/login@v1
@@ -46,9 +62,9 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy to Azure Web App
+      id: webapp
       uses: azure/webapps-deploy@v3
       with:
-        app-name: <app-name>
-        slot-name: 'production'
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        images: '<acr-login-server>/<image-name>:$IMAGE_VERSION'
+        images: ${{ env.REGISTRY_LOGIN_SERVER}}/${{ env.IMAGE_BASE_NAME }}:${{ needs.build.outputs.image-version }}

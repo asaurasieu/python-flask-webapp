@@ -2,20 +2,35 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "keyVaultName": {
-            "value": "asauras-kv"
-        },
+        //"keyVaultName": {
+            //"value": "asauras-kv"
+        //},
         "containerRegistryName": {
             "value": "asaurasacr"
         },
-        "appServicePlanName": {
+
+        "ServicePlanName": {
             "value": "asauras-asp"
         },
-        "siteName": {
+
+        "webAppName": {
             "value": "asauras-ex3"
         },
+
         "containerRegistryImageName": {
-            "value": "asaurasapp-ex3"
+            "value": "flask-demo"
+        }, 
+
+        "containerRegistryImageVersion": {
+            "value": "latest"
+        },
+
+        "location": {
+            "value": "westeurope"
         }
+        //"siteName": {
+           // "value": "asauras-ex3"
+        //},
+       
     }
 }
