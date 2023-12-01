@@ -23,7 +23,7 @@ jobs:
         az deployment group create \
           --resource-group aguadamillas_students_1 \
           --template-file ./main.bicep \
-          --parameters @main.json \
+          --parameters @parameters.json \
           --parameters DOCKER_REGISTRY_SERVER_URL=${{ vars.DOCKER_REGISTRY_SERVER_URL }} \
           --parameters DOCKER_REGISTRY_SERVER_USERNAME=${{ vars.DOCKER_REGISTRY_SERVER_USERNAME }} \
           --parameters DOCKER_REGISTRY_SERVER_PASSWORD=${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
