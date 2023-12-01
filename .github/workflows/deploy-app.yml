@@ -3,26 +3,28 @@ name: Deploy to Azure WebApp
 on: [push, workflow_dispatch]
 
 env:
-  IMAGE_NAME: flask-demo
+  REGISTRY_LOGIN_SERVER: 'asaurasacr.azurecr.io'
+  IMAGE_BASE_NAME: 'asaurasapp-ex3'
+  AZURE_WEBAPP_NAME: 'asaurasapp-ex3'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@main
 
     - name: Login to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+  
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
-        login-server: ${{vars.DOCKER_REGISTRY_SERVER_URL }}
-        username: ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}
-        password: ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
+        login-server: asaurasacr.azurecr.io
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
 
     - name: Set image version
       id: image-version
@@ -31,14 +33,13 @@ jobs:
     - name: 'Build and push image'
       working-directory: ./app
       run: |
-       docker build . -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ steps.image-version.outputs.version }}
-       docker build . -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
-       docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ steps.image-version.outputs.version }}
-       docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{env.IMAGE_BASE_NAME}}:${{ github.ref_name }}-latest
+        docker build . -t ${{ env.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker build . -t ${{ env.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
+        docker push ${{ env.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker push ${{ env.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
 
-       
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
+      uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ secrets.WEB_APP_NAME }}
-        images: '${{secrets.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
+        images: '${{ secrets.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
