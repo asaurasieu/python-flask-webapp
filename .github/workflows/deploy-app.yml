@@ -2,7 +2,7 @@ name: Deploy Azure Web App
 on:
   push:
     paths:
-      - "app/**"
+      - 'app/**'
   workflow_dispatch:
 
 env:
