@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 env:
   IMAGE_NAME: flask-demo
-  REGISTRY_URL: asaurasacr.azurecr.io  
+  REGISTRY_URL: asaurasacr.azurecr.io
 
 jobs:
   build-and-deploy:
