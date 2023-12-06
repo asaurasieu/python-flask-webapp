@@ -24,19 +24,21 @@ jobs:
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
+
     - name: Set image version
       id: image-version
-      run: echo "IMAGE_VERSION=$(echo ${GITHUB_REF#refs/heads/}/$(date +'%Y.%m.%d.%H.%M'))" >> $GITHUB_ENV
+      run: echo "::set-output name=version::$(date +'%Y.%m.%d.%H.%M')"
 
     - name: 'Build and push image'
+      working-directory: ./app
       run: |
-        docker build . -t ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
-        docker push ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
-        docker tag ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
-        docker push ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+        docker build . -t ${{ env.REGISTRY_URL}}/${{ env.IMAGE_NAME }}:${{ steps.image-version.outputs.version }}
+        docker build . -t ${{ env.REGISTRY_URL}}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-latest
+        docker push ${{ env.REGISTRY_URL}}/${{ env.IMAGE_NAME }}:${{ steps.image-version.outputs.version }}
+        docker push ${{ env.REGISTRY_URL}}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-latest
 
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'asauras-webapp'
-        images: '${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}'
+        images: '${{ env.REGISTRY_URL }}/${{env.IMAGE_NAME}}:latest'
