@@ -31,12 +31,12 @@ jobs:
 
     - name: 'Build and push image'
       run: |
-        docker build . -t ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
-        docker build . -t ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
-        docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
-        docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
+        docker build . -t ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker build . -t ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
+        docker push ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
+        docker push ${{ secrets.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
 
     - uses: azure/webapps-deploy@v2
       with:
         app-name: 'asauras-webapp'
-        images: '${{vars.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
+        images: '${{secrets.DOCKER_REGISTRY_SERVER_URL}}/${{env.IMAGE_NAME}}:latest'
